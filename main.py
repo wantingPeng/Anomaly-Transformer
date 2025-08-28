@@ -19,6 +19,7 @@ def main(config):
 
     if config.mode == 'train':
         solver.train()
+        solver.test()
     elif config.mode == 'test':
         solver.test()
 
