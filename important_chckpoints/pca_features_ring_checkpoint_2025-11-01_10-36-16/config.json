@@ -1,0 +1,16 @@
+{
+  "lr": 0.0001,
+  "num_epochs": 10,
+  "k": 10,
+  "win_size": 20,
+  "input_c": 6,
+  "output_c": 6,
+  "batch_size": 32,
+  "pretrained_model": null,
+  "dataset": "Custom",
+  "mode": "train",
+  "data_path": "dataset/dataset/pca_analysis_and_result_1/ring/pca_features_ring.parquet",
+  "model_save_path": "checkpoints",
+  "anormly_ratio": 4.0,
+  "checkpoint_dir": ""
+}

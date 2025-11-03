@@ -1,0 +1,16 @@
+{
+  "lr": 0.0001,
+  "num_epochs": 10,
+  "k": 10,
+  "win_size": 20,
+  "input_c": 31,
+  "output_c": 31,
+  "batch_size": 32,
+  "pretrained_model": null,
+  "dataset": "Custom",
+  "mode": "train",
+  "data_path": "dataset/dataset/downsampleData_scratch_1minut/pcb/pcb_cleaned_1minut_20250928_161509.parquet",
+  "model_save_path": "checkpoints",
+  "anormly_ratio": 3.0,
+  "checkpoint_dir": ""
+}

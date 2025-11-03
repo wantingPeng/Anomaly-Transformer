@@ -19,7 +19,10 @@ def main(config):
 
     if config.mode == 'train':
         solver.train()
+        solver.test()
     elif config.mode == 'test':
+        if getattr(config, 'checkpoint_dir', ''):
+            solver.latest_checkpoint_dir = config.checkpoint_dir
         solver.test()
 
     return solver
@@ -38,9 +41,11 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained_model', type=str, default=None)
     parser.add_argument('--dataset', type=str, default='credit')
     parser.add_argument('--mode', type=str, default='train', choices=['train', 'test'])
-    parser.add_argument('--data_path', type=str, default='./dataset/creditcard_ts.csv')
+    parser.add_argument('--data_path', type=str, default=None)
     parser.add_argument('--model_save_path', type=str, default='checkpoints')
     parser.add_argument('--anormly_ratio', type=float, default=4.00)
+    parser.add_argument('--checkpoint_dir', type=str, default='',
+                        help='Path to an existing checkpoint directory containing model.pth/config.json')
 
     config = parser.parse_args()
 

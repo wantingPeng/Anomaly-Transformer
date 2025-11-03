@@ -4,6 +4,8 @@ import torch.nn.functional as F
 import numpy as np
 import os
 import time
+import json
+from datetime import datetime
 from utils.utils import *
 from model.AnomalyTransformer import AnomalyTransformer
 from data_factory.data_loader import get_loader_segment
@@ -24,17 +26,18 @@ def adjust_learning_rate(optimizer, epoch, lr_):
 
 
 class EarlyStopping:
-    def __init__(self, patience=7, verbose=False, dataset_name='', delta=0):
+    def __init__(self, patience=7, verbose=False, dataset_name='', delta=0, metadata=None):
         self.patience = patience
         self.verbose = verbose
         self.counter = 0
         self.best_score = None
         self.best_score2 = None
         self.early_stop = False
-        self.val_loss_min = np.Inf
-        self.val_loss2_min = np.Inf
+        self.val_loss_min = np.inf
+        self.val_loss2_min = np.inf
         self.delta = delta
         self.dataset = dataset_name
+        self.metadata = metadata if isinstance(metadata, dict) else None
 
     def __call__(self, val_loss, val_loss2, model, path):
         score = -val_loss
@@ -42,7 +45,8 @@ class EarlyStopping:
         if self.best_score is None:
             self.best_score = score
             self.best_score2 = score2
-            self.save_checkpoint(val_loss, val_loss2, model, path)
+            checkpoint_path = self.save_checkpoint(val_loss, val_loss2, model, path)
+            return checkpoint_path
         elif score < self.best_score + self.delta or score2 < self.best_score2 + self.delta:
             self.counter += 1
             print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
@@ -51,15 +55,34 @@ class EarlyStopping:
         else:
             self.best_score = score
             self.best_score2 = score2
-            self.save_checkpoint(val_loss, val_loss2, model, path)
+            checkpoint_path = self.save_checkpoint(val_loss, val_loss2, model, path)
             self.counter = 0
+            return checkpoint_path
+        return None
 
     def save_checkpoint(self, val_loss, val_loss2, model, path):
         if self.verbose:
             print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
-        torch.save(model.state_dict(), os.path.join(path, str(self.dataset) + '_checkpoint.pth'))
+
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        ckpt_dir_name = f"{self.dataset}_checkpoint_{timestamp}"
+        ckpt_dir = os.path.join(path, ckpt_dir_name)
+        os.makedirs(ckpt_dir, exist_ok=True)
+
+        model_path = os.path.join(ckpt_dir, "model.pth")
+        torch.save(model.state_dict(), model_path)
+
+        if self.metadata is not None:
+            try:
+                cfg_path = os.path.join(ckpt_dir, "config.json")
+                with open(cfg_path, 'w', encoding='utf-8') as f:
+                    json.dump(self.metadata, f, ensure_ascii=False, indent=2)
+            except Exception:
+                pass
+
         self.val_loss_min = val_loss
         self.val_loss2_min = val_loss2
+        return ckpt_dir
 
 
 class Solver(object):
@@ -68,6 +91,21 @@ class Solver(object):
     def __init__(self, config):
 
         self.__dict__.update(Solver.DEFAULTS, **config)
+
+        try:
+            self.run_config = dict(config)
+        except Exception:
+            self.run_config = None
+
+        data_source_repr = str(self.data_path) if getattr(self, 'data_path', None) else str(self.dataset)
+        base_name = os.path.splitext(os.path.basename(data_source_repr))[0]
+        if not base_name:
+            base_name = str(self.dataset)
+        sanitized = ''.join([c if (str(c).isalnum() or c in ('-', '_')) else '_' for c in base_name])
+        self.checkpoint_stem = sanitized or str(self.dataset)
+
+        checkpoint_dir_attr = getattr(self, 'checkpoint_dir', '')
+        self.latest_checkpoint_dir = checkpoint_dir_attr if checkpoint_dir_attr else None
 
         self.train_loader = get_loader_segment(self.data_path, batch_size=self.batch_size, win_size=self.win_size,
                                                mode='train',
@@ -135,7 +173,8 @@ class Solver(object):
         path = self.model_save_path
         if not os.path.exists(path):
             os.makedirs(path)
-        early_stopping = EarlyStopping(patience=3, verbose=True, dataset_name=self.dataset)
+        patience = getattr(self, 'patience', 7)
+        early_stopping = EarlyStopping(patience=patience, verbose=True, dataset_name=self.checkpoint_stem, metadata=self.run_config)
         train_steps = len(self.train_loader)
 
         for epoch in range(self.num_epochs):
@@ -193,27 +232,37 @@ class Solver(object):
             print("Epoch: {} cost time: {}".format(epoch + 1, time.time() - epoch_time))
             train_loss = np.average(loss1_list)
 
-            vali_loss1, vali_loss2 = self.vali(self.test_loader)
+            vali_loss1, vali_loss2 = self.vali(self.vali_loader)
 
             print(
                 "Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} ".format(
                     epoch + 1, train_steps, train_loss, vali_loss1))
-            early_stopping(vali_loss1, vali_loss2, self.model, path)
+            checkpoint_dir = early_stopping(vali_loss1, vali_loss2, self.model, path)
+            if checkpoint_dir is not None:
+                self.latest_checkpoint_dir = checkpoint_dir
             if early_stopping.early_stop:
                 print("Early stopping")
                 break
             adjust_learning_rate(self.optimizer, epoch + 1, self.lr)
 
     def test(self):
-        self.model.load_state_dict(
-            torch.load(
-                os.path.join(str(self.model_save_path), str(self.dataset) + '_checkpoint.pth')))
+        if self.latest_checkpoint_dir is not None and os.path.isdir(self.latest_checkpoint_dir):
+            ckpt_dir = self.latest_checkpoint_dir
+        else:
+            raise FileNotFoundError(f"No checkpoint directory found in {self.latest_checkpoint_dir}")
+
+        model_path = os.path.join(ckpt_dir, "model.pth")
+        if not os.path.exists(model_path):
+            raise FileNotFoundError(f"Model file not found: {model_path}")
+
+        self.model.load_state_dict(torch.load(model_path))
+        print(f"Loading checkpoint from: {model_path}")
         self.model.eval()
         temperature = 50
 
         print("======================TEST MODE======================")
 
-        criterion = nn.MSELoss(reduce=False)
+        criterion = nn.MSELoss(reduction='none')
 
         # (1) stastic on the train set
         attens_energy = []
@@ -251,7 +300,7 @@ class Solver(object):
 
         # (2) find the threshold
         attens_energy = []
-        for i, (input_data, labels) in enumerate(self.thre_loader):
+        for i, (input_data, labels) in enumerate(self.test_loader):
             input = input_data.float().to(self.device)
             output, series, prior, _ = self.model(input)
 
@@ -291,7 +340,7 @@ class Solver(object):
         # (3) evaluation on the test set
         test_labels = []
         attens_energy = []
-        for i, (input_data, labels) in enumerate(self.thre_loader):
+        for i, (input_data, labels) in enumerate(self.test_loader):
             input = input_data.float().to(self.device)
             output, series, prior, _ = self.model(input)
 
@@ -371,5 +420,22 @@ class Solver(object):
             "Accuracy : {:0.4f}, Precision : {:0.4f}, Recall : {:0.4f}, F-score : {:0.4f} ".format(
                 accuracy, precision,
                 recall, f_score))
+
+        try:
+            result_payload = {
+                "threshold": float(thresh),
+                "summary": {
+                    "accuracy": float(accuracy),
+                    "precision": float(precision),
+                    "recall": float(recall),
+                    "f_score": float(f_score)
+                }
+            }
+            result_path = os.path.join(ckpt_dir, "result.json")
+            with open(result_path, 'w', encoding='utf-8') as f:
+                json.dump(result_payload, f, ensure_ascii=False, indent=2)
+            print(f"Test results saved to: {result_path}")
+        except Exception as e:
+            print(f"Failed to save test results: {e}")
 
         return accuracy, precision, recall, f_score
