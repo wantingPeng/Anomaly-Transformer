@@ -130,3 +130,8 @@ dataset/
 checkpoints/
 experiments/checkpoints_dowmsample
 experiments/checkpoints_pca
+experiments/checkpoints_pca_old
+
+
+
+*.pth

@@ -21,14 +21,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # ============================================================================
 
 # Select which parameter to analyze (choose one: 'win_size', 'k', 'anormly_ratio')
-PARAM_TO_ANALYZE = 'k'  # Change this to 'k' or 'anormly_ratio' for other analyses
+PARAM_TO_ANALYZE = 'win_size'  # Change this to 'k' or 'anormly_ratio' for other analyses
 
 # Datasets to test
 DATASETS = ['contact', 'ring', 'pcb']
 
 # Parameter values to test (modify based on PARAM_TO_ANALYZE)
 PARAM_VALUES = {
-    'win_size': [10, 20, 30, 40, 50, 60],
+    'win_size': [10, 20, 30, 40, 50, 60,70,80,90,100],
     'k': [3, 5, 7, 10, 15],
     'anormly_ratio': [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
     'batch_size': [32, 64, 128, 256, 512]
@@ -45,7 +45,7 @@ FIXED_PARAMS = {
 }
 
 # Output configuration
-OUTPUT_DIR = 'experiments/results'
+OUTPUT_DIR = 'experiments/results_pca/anomalytransformer1'
 PLOT_STYLE = 'seaborn-v0_8-darkgrid'
 
 # ============================================================================
@@ -54,19 +54,19 @@ PLOT_STYLE = 'seaborn-v0_8-darkgrid'
 
 DATASET_CONFIGS = {
     'contact': {
-        'data_path': 'dataset/dataset/pca_analysis_and_result_1/contact/pca_features_contact.parquet',
-        'input_c': 7,
-        'output_c': 7,
+        'data_path': 'dataset/dataset/downsampleData_scratch_1minut/contact/contact_cleaned_1minut_20250928_172122.parquet',
+        'input_c': 27,
+        'output_c': 27,
     },
     'ring': {
-        'data_path': 'dataset/dataset/pca_analysis_and_result_1/ring/pca_features_ring.parquet',
-        'input_c': 6,
-        'output_c': 6,
+        'data_path': 'dataset/dataset/downsampleData_scratch_1minut/ring/Ring_cleaned_1minut_20250928_170147.parquet',
+        'input_c': 28,
+        'output_c': 28,
     },
     'pcb': {
-        'data_path': 'dataset/dataset/pca_analysis_and_result_1/pcb/pca_features_pcb.parquet',
-        'input_c': 10,
-        'output_c': 10,
+        'data_path': 'dataset/dataset/downsampleData_scratch_1minut/pcb/pcb_cleaned_1minut_20250928_161509.parquet',
+        'input_c': 31,
+        'output_c': 31,
     }
 }
 
@@ -287,32 +287,14 @@ def plot_results(results, param_name, output_dir=OUTPUT_DIR):
             all_param_vals.append(pv)
             all_f1_scores.append(metrics['f_score'] * 100)
     
-    # Ensure x-axis always shows configured parameter values
-    configured_param_vals = PARAM_VALUES.get(param_name, [])
-    if configured_param_vals:
-        # Convert configured values to same type as experiment outputs when possible
-        normalized_config_vals = []
-        for val in configured_param_vals:
-            if isinstance(val, (int, float)):
-                normalized_config_vals.append(val)
-            else:
-                try:
-                    # Attempt numeric conversion (covers cases like "10")
-                    numeric_val = float(val)
-                    # Cast back to int if it represents an integer value
-                    if numeric_val.is_integer():
-                        numeric_val = int(numeric_val)
-                    normalized_config_vals.append(numeric_val)
-                except (TypeError, ValueError):
-                    normalized_config_vals.append(val)
-        all_param_vals.extend(normalized_config_vals)
-
+    # Only use parameter values that actually exist in results
+    # Remove duplicates and sort
     if all_param_vals:
-        x_min, x_max = min(all_param_vals), max(all_param_vals)
+        unique_param_vals = sorted(set(all_param_vals))
+        x_min, x_max = min(unique_param_vals), max(unique_param_vals)
         x_range = x_max - x_min
         plt.xlim(x_min - x_range * 0.05, x_max + x_range * 0.05)
-        unique_ticks = sorted(set(all_param_vals))
-        plt.xticks(unique_ticks)
+        plt.xticks(unique_param_vals)
     
     if all_f1_scores:
         y_min = max(0, min(all_f1_scores) - 5)
@@ -480,7 +462,7 @@ def plot_only_mode(param_name):
 
 if __name__ == '__main__':
     # Set to True to only regenerate plots from existing results
-    PLOT_ONLY = False
+    PLOT_ONLY = True
     
     if PLOT_ONLY:
         plot_only_mode(PARAM_TO_ANALYZE)

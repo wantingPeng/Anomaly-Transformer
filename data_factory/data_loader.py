@@ -11,7 +11,7 @@ import math
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import pickle
-
+from sklearn.decomposition import PCA
 
 class PSMSegLoader(object):
     def __init__(self, data_path, win_size, step, mode="train"):
@@ -250,6 +250,8 @@ class CustomSegLoader(object):
         # 控制参数
         downsample = False  # 是否通过下采样调整异常比例到20%
         onlyNormalData = True  # 是否仅保留训练集中的正常数据（标签=0）
+        use_pca = False  # 是否使用PCA降维（仅在训练集上fit，对val/test仅transform）
+        pca_n_components = 10  # PCA降维维度：整数=具体维度，0-1浮点数=保留方差比例，None=保留所有成分
         
         # 参数冲突检查
         if downsample and onlyNormalData:
@@ -310,7 +312,28 @@ class CustomSegLoader(object):
         self.train = self.scaler.transform(train_X)
         self.val = self.scaler.transform(val_X)
         self.test = self.scaler.transform(test_X)
-
+        if use_pca:
+            print(f"\n[PCA降维] 启用")
+            print(f"  n_components={pca_n_components}")
+            print(f"  PCA前特征维度: {self.train.shape[1]}")
+            
+            # 初始化并仅在训练集上拟合PCA
+            self.pca = PCA(n_components=pca_n_components)
+            self.pca.fit(self.train)
+            
+            # 对所有集合进行transform（保持时间维度不变，只改变特征维度）
+            self.train = self.pca.transform(self.train)
+            self.val = self.pca.transform(self.val)
+            self.test = self.pca.transform(self.test)
+            
+            print(f"  PCA后特征维度: {self.train.shape[1]}")
+            print(f"  解释方差比（前10个）: {self.pca.explained_variance_ratio_[:min(10, len(self.pca.explained_variance_ratio_))]}")
+            print(f"  累积解释方差: {np.sum(self.pca.explained_variance_ratio_):.4f}")
+            print(f"  时间点数量: train={self.train.shape[0]}, val={self.val.shape[0]}, test={self.test.shape[0]} (未改变)")
+            print(f"[PCA降维] 完成")
+            print(f"\n⚠️  重要提示：PCA降维后，请在命令行参数中设置：")
+            print(f"    --input_c {self.train.shape[1]}")
+            print(f"    否则模型维度会不匹配！\n")
         # 打印数据形状与异常比例
         print(f"数据加载自: {parquet_file}")
         print(f"训练集形状: {self.train.shape}")
