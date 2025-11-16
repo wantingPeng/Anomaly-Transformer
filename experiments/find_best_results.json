@@ -1,0 +1,27 @@
+{
+  "checkpoint_dir": "experiments/checkpoints",
+  "timestamp": "20251114_130251",
+  "best_results": {
+    "contact": {
+      "file_path": "experiments/checkpoints/checkpoints_batch_size_analysis/contact_batch_size64_20251101_144126/contact_cleaned_1minut_20250928_172122_checkpoint_2025-11-01_14-41-29/result.json",
+      "precision": 0.5315808045165843,
+      "recall": 0.7368549767669357,
+      "f_score": 0.6176078712719073,
+      "accuracy": 0.953835684236575
+    },
+    "ring": {
+      "file_path": "experiments/checkpoints/checkpoints_anormly_ratio_analysis/ring_anormly_ratio3.0_20251101_140809/Ring_cleaned_1minut_20250928_170147_checkpoint_2025-11-01_14-08-13/result.json",
+      "precision": 0.46662979351032446,
+      "recall": 0.6881457313757476,
+      "f_score": 0.5561415073610195,
+      "accuracy": 0.9538180155464107
+    },
+    "pcb": {
+      "file_path": "experiments/checkpoints/checkpoints_anormly_ratio_analysis/pcb_anormly_ratio3.0_20251101_140916/pcb_cleaned_1minut_20250928_161509_checkpoint_2025-11-01_14-09-20/result.json",
+      "precision": 0.29782082324455206,
+      "recall": 0.6699346405228758,
+      "f_score": 0.41233657391887363,
+      "accuracy": 0.9599222679469593
+    }
+  }
+}
