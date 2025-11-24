@@ -1,27 +1,27 @@
 {
   "checkpoint_dir": "experiments/checkpoints_pca",
-  "timestamp": "20251114_134628",
+  "timestamp": "20251119_104518",
   "best_results": {
     "contact": {
-      "file_path": "experiments/checkpoints_pca/checkpoints_k_analysis/contact_k10_20251113_150027/contact_cleaned_1minut_20250928_172122_checkpoint_2025-11-13_15-00-35/result.json",
-      "precision": 0.5335382390164527,
-      "recall": 0.7216923453167033,
-      "f_score": 0.6135135135135135,
-      "accuracy": 0.9539965355110122
+      "file_path": "experiments/checkpoints_pca/checkpoints_k_analysis/contact_k6_20251119_095828/contact_cleaned_1minut_20250928_172122_checkpoint_2025-11-19_09-58-32/result.json",
+      "precision": 0.5345012513407222,
+      "recall": 0.7312301296160431,
+      "f_score": 0.6175771971496437,
+      "accuracy": 0.9541821331353625
     },
     "ring": {
-      "file_path": "experiments/checkpoints_pca/checkpoints_batch_size_analysis/ring_batch_size128_20251113_150121/Ring_cleaned_1minut_20250928_170147_checkpoint_2025-11-13_15-01-41/result.json",
-      "precision": 0.45351473922902497,
-      "recall": 0.6525285481239804,
-      "f_score": 0.5351170568561873,
-      "accuracy": 0.9523319615912208
+      "file_path": "experiments/checkpoints_pca/checkpoints_k_analysis/ring_k6_20251119_095934/Ring_cleaned_1minut_20250928_170147_checkpoint_2025-11-19_09-59-38/result.json",
+      "precision": 0.4597367402245451,
+      "recall": 0.6457313757476889,
+      "f_score": 0.5370872908186342,
+      "accuracy": 0.9532007315957933
     },
     "pcb": {
-      "file_path": "experiments/checkpoints_pca/checkpoints_anormly_ratio_analysis/pcb_anormly_ratio2.0_20251113_145239/pcb_cleaned_1minut_20250928_161509_checkpoint_2025-11-13_14-52-55/result.json",
-      "precision": 0.2979502196193265,
-      "recall": 0.6650326797385621,
-      "f_score": 0.4115267947421638,
-      "accuracy": 0.9600823045267489
+      "file_path": "experiments/checkpoints_pca/checkpoints_k_analysis/pcb_k1_20251119_100001/pcb_cleaned_1minut_20250928_161509_checkpoint_2025-11-19_10-00-05/result.json",
+      "precision": 0.30233678631655025,
+      "recall": 0.6835511982570807,
+      "f_score": 0.4192416903290463,
+      "accuracy": 0.9602537722908093
     }
   }
 }

@@ -24,12 +24,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PARAM_TO_ANALYZE = 'win_size'  # Change this to 'k' or 'anormly_ratio' for other analyses
 
 # Datasets to test
-DATASETS = ['contact', 'ring', 'pcb']
+DATASETS = ['contact','ring','pcb']
 
 # Parameter values to test (modify based on PARAM_TO_ANALYZE)
 PARAM_VALUES = {
     'win_size': [10, 20, 30, 40, 50, 60,70,80,90,100],
-    'k': [3, 5, 7, 10, 15],
+    'k': [0,1,2,3,4,5,6],
     'anormly_ratio': [1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
     'batch_size': [32, 64, 128, 256, 512]
 }
@@ -45,30 +45,50 @@ FIXED_PARAMS = {
 }
 
 # Output configuration
-OUTPUT_DIR = 'experiments/results_pca/anomalytransformer1'
+OUTPUT_DIR = 'experiments/results1'
 PLOT_STYLE = 'seaborn-v0_8-darkgrid'
 
 # ============================================================================
 # DATASET CONFIGURATIONS
 # ============================================================================
 
+# DATASET_CONFIGS = {
+#     'contact': {
+#         'data_path': 'dataset/dataset/downsampleData_scratch_1minut/contact/contact_cleaned_1minut_20250928_172122.parquet',
+#         'input_c': 27,
+#         'output_c': 27,
+#     },
+#     'ring': {
+#         'data_path': 'dataset/dataset/downsampleData_scratch_1minut/ring/Ring_cleaned_1minut_20250928_170147.parquet',
+#         'input_c': 28,
+#         'output_c': 28,
+#     },
+#     'pcb': {
+#         'data_path': 'dataset/dataset/downsampleData_scratch_1minut/pcb/pcb_cleaned_1minut_20250928_161509.parquet',
+#         'input_c': 31,
+#         'output_c': 31,
+#     }
+# }
+
 DATASET_CONFIGS = {
     'contact': {
         'data_path': 'dataset/dataset/downsampleData_scratch_1minut/contact/contact_cleaned_1minut_20250928_172122.parquet',
-        'input_c': 27,
-        'output_c': 27,
+        'input_c': 10,
+        'output_c': 10,
     },
     'ring': {
         'data_path': 'dataset/dataset/downsampleData_scratch_1minut/ring/Ring_cleaned_1minut_20250928_170147.parquet',
-        'input_c': 28,
-        'output_c': 28,
+        'input_c': 10,
+        'output_c': 10,
     },
     'pcb': {
         'data_path': 'dataset/dataset/downsampleData_scratch_1minut/pcb/pcb_cleaned_1minut_20250928_161509.parquet',
-        'input_c': 31,
-        'output_c': 31,
+        'input_c': 10,
+        'output_c': 10,
     }
 }
+
+
 
 # Plot styling
 PLOT_CONFIG = {
@@ -112,7 +132,7 @@ def run_single_experiment(dataset_name, param_name, param_value, fixed_params):
     
     # Create unique model save path
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    model_save_path = f'checkpoints_{param_name}_analysis/{dataset_name}_{param_name}{param_value}_{timestamp}'
+    model_save_path = f'checkpoints_{param_name}_analysis/{dataset_name}_{param_name}{param_value}_{timestamp}_pca'
     
     # Build parameters dictionary
     params = fixed_params.copy()
@@ -462,7 +482,7 @@ def plot_only_mode(param_name):
 
 if __name__ == '__main__':
     # Set to True to only regenerate plots from existing results
-    PLOT_ONLY = True
+    PLOT_ONLY = False
     
     if PLOT_ONLY:
         plot_only_mode(PARAM_TO_ANALYZE)

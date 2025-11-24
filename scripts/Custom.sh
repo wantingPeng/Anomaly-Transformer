@@ -9,16 +9,16 @@ export CUDA_VISIBLE_DEVICES=0
 # 训练阶段
 python main.py \
     --dataset Custom \
-    --data_path 'pca_results/reduced_data.parquet' \
+    --data_path 'dataset/dataset/downsampleData_scratch_1minut/contact/contact_cleaned_1minut_20250928_172122.parquet' \
     --num_epochs 10 \
-    --win_size 50 \
-    --batch_size 32 \
+    --win_size 30 \
+    --batch_size 64 \
     --mode test \
-    --input_c 31 \
-    --output_c 31 \
+    --input_c 27 \
+    --output_c 27 \
     --lr 1e-4 \
-    --k 10 \
+    --k 3 \
     --anormly_ratio 3.0 \
-    --checkpoint_dir 'checkpoints_win_size_analysis/pcb_win_size50_20251101_134112/pcb_cleaned_1minut_20250928_161509_checkpoint_2025-11-01_13-41-17' \
+    --checkpoint_dir 'experiments/checkpoints/checkpoints_batch_size_analysis/contact_batch_size64_20251101_144126/contact_cleaned_1minut_20250928_172122_checkpoint_2025-11-01_14-41-29' \
 
 

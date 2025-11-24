@@ -230,11 +230,11 @@ def main():
     # ============================================================================
     
     # Checkpoint directory to search for result.json files
-    checkpoint_dir = 'experiments/checkpoints_pca'
+    checkpoint_dir = 'checkpoint_pca'
     
     # Output file path (fixed to PatchTST_supervised/exp/find_best_results.json)
     script_dir = Path(__file__).parent
-    output_file = script_dir / 'find_best_results.json'
+    output_file = script_dir / 'find_best_results_pca.json'
     
     # ============================================================================
     
