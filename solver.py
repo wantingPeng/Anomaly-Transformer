@@ -9,6 +9,7 @@ from datetime import datetime
 from utils.utils import *
 from model.AnomalyTransformer import AnomalyTransformer
 from data_factory.data_loader import get_loader_segment
+from metrics.metrics import *
 
 
 def my_kl_loss(p, q):
@@ -366,12 +367,10 @@ class Solver(object):
                                                                                                 self.win_size)),
                         series[u].detach()) * temperature
             metric = torch.softmax((-series_loss - prior_loss), dim=-1)
-
             cri = metric * loss
             cri = cri.detach().cpu().numpy()
             attens_energy.append(cri)
             test_labels.append(labels)
-
         attens_energy = np.concatenate(attens_energy, axis=0).reshape(-1)
         test_labels = np.concatenate(test_labels, axis=0).reshape(-1)
         test_energy = np.array(attens_energy)
@@ -381,10 +380,11 @@ class Solver(object):
 
         gt = test_labels.astype(int)
 
-        print("pred:   ", pred.shape)
-        print("gt:     ", gt.shape)
 
-        # detection adjustment: please see this issue for more information https://github.com/thuml/Anomaly-Transformer/issues/14
+        scores_simple = combine_all_evaluation_scores(pred, gt, test_energy)
+        for key, value in scores_simple.items():
+            print('{0:21} : {1:0.4f}'.format(key, value))
+        #detection adjustment: please see this issue for more information https://github.com/thuml/Anomaly-Transformer/issues/14
         anomaly_state = False
         for i in range(len(gt)):
             if gt[i] == 1 and pred[i] == 1 and not anomaly_state:
@@ -424,6 +424,7 @@ class Solver(object):
         try:
             result_payload = {
                 "threshold": float(thresh),
+                "metrics": {k: float(v) for k, v in scores_simple.items()},
                 "summary": {
                     "accuracy": float(accuracy),
                     "precision": float(precision),
@@ -431,7 +432,10 @@ class Solver(object):
                     "f_score": float(f_score)
                 }
             }
-            result_path = os.path.join(ckpt_dir, "result.json")
+            if self.mode == 'test':
+                result_path = os.path.join(ckpt_dir, "testresult.json")
+            else:
+                result_path = os.path.join(ckpt_dir, "result.json")
             with open(result_path, 'w', encoding='utf-8') as f:
                 json.dump(result_payload, f, ensure_ascii=False, indent=2)
             print(f"Test results saved to: {result_path}")
